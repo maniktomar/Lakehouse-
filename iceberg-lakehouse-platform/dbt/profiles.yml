@@ -1,0 +1,22 @@
+# dbt connection profile for the Iceberg Lakehouse.
+# Connects to Trino which reads from Iceberg tables managed by Nessie.
+#
+# Usage:
+#   dbt run   --profiles-dir .
+#   dbt test  --profiles-dir .
+#   dbt docs generate --profiles-dir .
+#
+# Trino must be running at localhost:8080 (start with: .\scripts\start.ps1)
+
+lakehouse:
+  target: dev
+  outputs:
+    dev:
+      type: trino
+      method: none          # no authentication for local dev
+      user: admin
+      host: localhost
+      port: 8080
+      database: lakehouse   # Trino catalog name (from trino/catalog/lakehouse.properties)
+      schema: gold          # default schema (models override this per-layer)
+      threads: 4

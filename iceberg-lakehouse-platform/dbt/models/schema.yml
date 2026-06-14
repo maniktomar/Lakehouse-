@@ -1,0 +1,110 @@
+version: 2
+
+models:
+  - name: stg_orders
+    description: >
+      Staging view over the Iceberg silver.orders table.
+      Filtered to quality_status = 'valid' rows only.
+      This is the canonical source of truth for all downstream mart models.
+    columns:
+      - name: event_id
+        description: "Unique event identifier (UUID)"
+        tests:
+          - not_null
+      - name: order_id
+        description: "Unique order identifier"
+        tests:
+          - not_null
+          - unique
+      - name: customer_id
+        description: "Customer identifier"
+        tests:
+          - not_null
+      - name: category
+        description: "Product category"
+        tests:
+          - not_null
+          - accepted_values:
+              values: ["electronics", "home", "sports", "fashion", "beauty"]
+      - name: sales_channel
+        description: "Sales channel"
+        tests:
+          - accepted_values:
+              values: ["web", "mobile", "store", "partner"]
+      - name: currency
+        description: "Order currency"
+        tests:
+          - accepted_values:
+              values: ["USD", "GBP", "EUR"]
+      - name: quality_status
+        description: "Quality validation result — always 'valid' in this view"
+        tests:
+          - accepted_values:
+              values: ["valid"]
+      - name: order_amount
+        description: "Total order value in order currency"
+        tests:
+          - not_null
+
+  - name: daily_sales
+    description: >
+      Daily sales aggregated by date, category, channel, and currency.
+      Source of truth for the Streamlit dashboard KPIs and trend charts.
+    columns:
+      - name: order_date
+        description: "Calendar date of the orders"
+        tests:
+          - not_null
+      - name: category
+        description: "Product category"
+        tests:
+          - not_null
+      - name: gross_sales
+        description: "Total revenue for this date/category/channel/currency combination"
+        tests:
+          - not_null
+      - name: order_count
+        description: "Number of completed orders"
+        tests:
+          - not_null
+      - name: unique_customers
+        description: "Count of distinct customers who ordered"
+
+  - name: channel_performance
+    description: >
+      Revenue and order share breakdown by sales channel.
+      Uses window functions to compute percentage shares.
+    columns:
+      - name: sales_channel
+        description: "Sales channel identifier"
+        tests:
+          - not_null
+          - unique
+      - name: total_revenue
+        description: "Cumulative revenue across all time"
+        tests:
+          - not_null
+      - name: revenue_share_pct
+        description: "Percentage of total revenue attributed to this channel"
+      - name: order_share_pct
+        description: "Percentage of total orders attributed to this channel"
+
+  - name: category_performance
+    description: >
+      Monthly category revenue with month-over-month growth rates.
+      Uses CTEs and LAG window functions to compute MoM change.
+    columns:
+      - name: category
+        description: "Product category"
+        tests:
+          - not_null
+      - name: month
+        description: "First day of the calendar month"
+        tests:
+          - not_null
+      - name: monthly_revenue
+        description: "Total revenue for this category in this month"
+        tests:
+          - not_null
+      - name: revenue_mom_growth_pct
+        description: "Month-over-month revenue growth percentage (null for first month)"

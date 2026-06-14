@@ -1,0 +1,6 @@
+pyspark==3.5.3
+pytest==8.3.3
+pytest-mock==3.14.0
+PyYAML==6.0.2
+python-dotenv==1.0.1
+dbt-trino==1.8.4

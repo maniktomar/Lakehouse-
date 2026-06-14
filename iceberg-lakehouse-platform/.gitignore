@@ -1,0 +1,17 @@
+.env
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+data/generated/
+warehouse/
+
+# Airflow runtime logs (keep directory structure via .gitkeep)
+logs/airflow/dag_id*
+logs/airflow/scheduler/
+logs/airflow/*.log
+
+# dbt build artifacts
+dbt/target/
+dbt/dbt_packages/
+dbt/logs/
