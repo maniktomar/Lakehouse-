@@ -1,40 +1,89 @@
-# Apache Iceberg Open Lakehouse
+<div align="center">
 
-A recruiter-focused data engineering project demonstrating an open lakehouse with Apache Iceberg, Spark, Nessie, MinIO, and Trino.
+<img src="https://iceberg.apache.org/img/Iceberg-logo.png" width="150" alt="Apache Iceberg Logo" />
 
-## Highlights
+[![Typing SVG](https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=30&pause=1000&color=0066cc&center=true&vCenter=true&width=600&lines=Apache+Iceberg+Lakehouse;Open+Data+Architecture;Spark+|+Trino+|+dbt+|+Airflow)](https://git.io/typing-svg)
 
-- Bronze, silver, and gold architecture
-- ACID Iceberg tables on S3-compatible object storage
-- Schema evolution and hidden partitioning
-- Snapshot history and time travel
-- Compaction and snapshot maintenance
-- Multi-engine access from Spark and Trino
-- Data quality quarantine tables
-- CDC-style inserts, updates, and deletes through Iceberg `MERGE`
-- Pipeline audit history and operational row-count metrics
+**A recruiter-focused data engineering project demonstrating an open lakehouse with Apache Iceberg, Spark, Nessie, MinIO, and Trino.**
 
-See [PROJECT_SHOWCASE.md](PROJECT_SHOWCASE.md) and [docs/architecture.md](docs/architecture.md).
+![Spark](https://img.shields.io/badge/Apache_Spark-E25A1C?style=for-the-badge&logo=apache-spark&logoColor=white)
+![Iceberg](https://img.shields.io/badge/Apache_Iceberg-0066cc?style=for-the-badge)
+![dbt](https://img.shields.io/badge/dbt-FF694B?style=for-the-badge&logo=dbt&logoColor=white)
+![Airflow](https://img.shields.io/badge/Apache_Airflow-017CEE?style=for-the-badge&logo=Apache%20Airflow&logoColor=white)
+![Trino](https://img.shields.io/badge/Trino-DD00A1?style=for-the-badge&logo=trino&logoColor=white)
 
-## Project Structure
+</div>
 
-```text
-docker/        Local MinIO, Nessie, Spark, and Trino stack
-src/           Data generation and Spark jobs
-sql/           Trino analytics queries
-trino/         Trino Iceberg catalog configuration
-scripts/       Windows helper scripts
-tests/         Unit tests
-docs/          Architecture documentation
+---
+
+## 🌊 Why This Lakehouse?
+
+Modern data engineering requires scalable, reliable, and multi-engine compatible storage. This project implements a **Bronze ➔ Silver ➔ Gold** medallion architecture on S3-compatible object storage using **Apache Iceberg**, allowing you to treat your data lake like a traditional ACID database.
+
+See the deep dives in [PROJECT_SHOWCASE.md](PROJECT_SHOWCASE.md) and [docs/architecture.md](docs/architecture.md).
+
+---
+
+## ✨ Enterprise Capabilities
+
+| 🏗️ Architecture & Storage | 🔄 Processing & Analytics | 🛡️ Governance & Quality |
+|:---|:---|:---|
+| 🥇 Bronze, Silver, Gold Medallion Layers | ⚡ PySpark Batch & CDC `MERGE` pipelines | ⏳ Time-travel & Snapshot history |
+| 🪣 S3-Compatible MinIO Object Storage | 📈 Trino distributed SQL query engine | 🔄 Schema Evolution & Hidden Partitioning |
+| 🧊 ACID Transactions via Apache Iceberg | 🛠️ dbt analytics models & transformations | 🏥 Data quality quarantine tables |
+| 🗂️ Nessie Catalog for Git-like branches | 📊 Streamlit live dashboard | 🧹 Compaction & snapshot maintenance |
+
+---
+
+## 🏗️ Architecture Diagram
+
+```mermaid
+graph TD;
+    subgraph Storage [MinIO S3 Object Storage]
+        BRONZE[(Bronze: Raw)]
+        SILVER[(Silver: Cleaned)]
+        GOLD[(Gold: Aggregated)]
+    end
+
+    subgraph Catalog
+        NESSIE[Nessie Catalog]
+    end
+
+    subgraph Compute Engines
+        SPARK[Apache Spark]
+        TRINO[Trino SQL Engine]
+    end
+
+    subgraph Orchestration & Modeling
+        AIRFLOW[Apache Airflow]
+        DBT[dbt Models]
+    end
+
+    subgraph Presentation
+        STREAMLIT[Streamlit Dashboard]
+    end
+
+    SPARK -->|Ingest & Merge| BRONZE
+    SPARK -->|Clean| SILVER
+    DBT -->|Transform| GOLD
+    AIRFLOW -->|Orchestrate| SPARK
+    AIRFLOW -->|Trigger| DBT
+    TRINO -->|Query| SILVER
+    TRINO -->|Query| GOLD
+    STREAMLIT -->|SQL Connect| TRINO
+    
+    SPARK -.->|Register| NESSIE
+    TRINO -.->|Read| NESSIE
 ```
 
-## Prerequisites
+---
 
-- Docker Desktop
-- Python 3.11+
-- PowerShell on Windows
+## 🛠️ Quick Start
 
-## Setup
+<details>
+<summary><b>1. Environment Setup</b></summary>
+
+You'll need Docker Desktop, Python 3.11+, and PowerShell (if on Windows).
 
 ```powershell
 cd iceberg-lakehouse-platform
@@ -44,85 +93,66 @@ pip install -r requirements.txt
 pip install dbt-trino==1.8.4
 Copy-Item .env.example .env
 ```
+</details>
 
-## Start the Lakehouse
+<details>
+<summary><b>2. Start the Stack</b></summary>
+
+Boot up MinIO, Nessie, Spark, Airflow, Trino, and Streamlit using Docker Compose:
 
 ```powershell
 .\scripts\start_full.ps1
 ```
 
-Services:
-
+**Services:**
 - **MinIO console:** `http://localhost:9001`
 - **Nessie API:** `http://localhost:19120/api/v2/config`
-- **Trino UI:** `http://localhost:8080`
 - **Airflow UI:** `http://localhost:8082` (admin / admin)
+- **Trino UI:** `http://localhost:8080`
 - **Streamlit Dashboard:** `http://localhost:8501`
+</details>
 
-Default MinIO credentials are in `.env.example` and should only be used locally.
-
-## Run the Pipeline
+<details>
+<summary><b>3. Run the Pipelines</b></summary>
 
 You can trigger the pipeline manually via the Airflow UI (`lakehouse_pipeline` DAG) or via PowerShell:
 
 ```powershell
+# Ingest 5,000 raw orders into Bronze & Silver via PySpark
 .\scripts\run_pipeline.ps1
-```
 
-This generates 5,000 orders and creates the `bronze` and `silver` Iceberg tables via PySpark.
-
-## Transform Data with dbt
-
-Once the raw data is ingested into the `silver` layer, run dbt to build the analytics models in the `gold` layer and run data quality tests:
-
-```powershell
+# Run dbt models to build analytics tables in the Gold layer
 .\scripts\run_dbt.ps1
-```
 
-Models created:
-- `lakehouse.silver.stg_orders`
-- `lakehouse.gold.daily_sales`
-- `lakehouse.gold.channel_performance`
-- `lakehouse.gold.category_performance`
-
-## View the Dashboard
-
-Open the Streamlit application to view live data directly from the Trino query engine:
-
-`http://localhost:8501`
-
-## Run an Incremental CDC Batch
-
-After the initial pipeline succeeds, apply a mix of inserts, updates, and deletes to demonstrate Iceberg `MERGE` and time-travel:
-
-```powershell
+# Run an incremental CDC batch (Iceberg MERGE)
 .\scripts\run_incremental.ps1
-```
 
-## Run Iceberg Demos
-
-```powershell
+# Run Iceberg schema evolution & time-travel demos
 .\scripts\run_demos.ps1
 ```
+</details>
 
-The demos add a column through schema evolution and inspect historical Iceberg snapshots.
+---
 
-## Test
+## 🧪 Testing & Teardown
 
 ```powershell
+# Run unit tests
 pytest -q
-```
 
-## Stop
-
-```powershell
+# Spin down all Docker services
 .\scripts\stop.ps1
-# or
-docker compose -f docker/docker-compose.yml down
+# or: docker compose -f docker/docker-compose.yml down
 ```
 
-## Next Steps for Production
+---
 
-- Replace generated files with Kafka or Debezium CDC.
-- Store data in AWS S3, Azure Data Lake Storage, or Google Cloud Storage.
-- Add OpenLineage and Marquez for lineage visibility.
+## 🚀 Next Steps for Production
+
+- **Streaming:** Replace generated files with Kafka or Debezium CDC for real-time streaming ingestion.
+- **Cloud Storage:** Swap MinIO for AWS S3, Azure Data Lake Storage, or Google Cloud Storage.
+- **Lineage:** Integrate OpenLineage and Marquez for end-to-end pipeline visibility.
+
+<div align="center">
+  <i>Built by Manik Tomar</i>
+</div>
